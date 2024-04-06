@@ -1,7 +1,24 @@
 # 参考
 https://labuladong.gitee.io/algo/home/
 
+```python
+# 找到数组中的最大值及其索引 速度更快
+    max_num = max(nums)
+    max_idx = nums.index(max_num) 
+```
+
+
+
 # 基础知识
+
+## 模板
+
+### 输入输出
+
+
+
+
+
 ## 数据结构基本操作
 
  数组遍历
@@ -281,3 +298,233 @@ class Solution(object):
 删除重复项
 巧妙，利用快慢指针，fast扫到一个新的直接赋值给slow
 fast直是在最开始多1，速度是同步的
+
+### 二分法
+167 两数组之和 输入有序数组
+给你一个下标从 1 开始的整数数组 numbers ，该数组已按 非递减顺序排列  ，请你从数组中找出满足相加之和等于目标数 target 的两个数。如果设这两个数分别是 numbers[index1] 和 numbers[index2] ，则 1 <= index1 < index2 <= numbers.length 。
+
+以长度为 2 的整数数组 [index1, index2] 的形式返回这两个整数的下标 index1 和 index2。
+
+你可以假设每个输入 只对应唯一的答案 ，而且你 不可以 重复使用相同的元素。
+
+```python
+class Solution(object):
+    def twoSum(self, numbers, target):
+        """
+        :type numbers: List[int]
+        :type target: int
+        :rtype: List[int]
+        """
+        # 非递减排序就可以用类似二分法
+        lenth=len(numbers)
+        left,right=0,lenth-1
+        while left!=right:
+            sum=numbers[left]+numbers[right]
+            if sum==target:
+                return [left+1,right+1]
+            if sum<target:
+                left+=1
+            else:
+                right-=1
+        return [-1,-1]
+```
+
+5 最长回文子串
+核心：对每个字符向两边扩散，注意区分奇偶数情况
+```python
+def longestPalindrome(s: str) -> str:
+    res = ""
+    for i in range(len(s)):
+        # 以 s[i] 为中心的最长回文子串
+        s1 = palindrome(s, i, i)
+        # 以 s[i] 和 s[i+1] 为中心的最长回文子串
+        s2 = palindrome(s, i, i + 1)
+        # res = longest(res, s1, s2)
+        res = res if len(res) > len(s1) else s1
+        res = res if len(res) > len(s2) else s2
+    return res
+
+def palindrome(s, l, r):
+    while (l >= 0 and r < len(s) and s[l] == s[r]):
+        l -= 1
+        r += 1
+    return s[l+1:r]
+```
+
+## 二叉树
+动归/DFS/回溯算法都可以看做二叉树问题的扩展，只是它们的关注点不同：
+
+动态规划算法属于分解问题的思路，它的关注点在整棵「子树」。
+回溯算法属于遍历的思路，它的关注点在节点间的「树枝」。
+DFS 算法属于遍历的思路，它的关注点在单个「节点」。
+
+层序遍历
+```python
+def levelTraverse(root: TreeNode):
+    if not root:
+        return
+    
+    q = deque()
+    q.append(root)
+
+    # 从上到下遍历二叉树的每一层
+    while q:
+        sz = len(q)
+        # 从左到右遍历每一层的每个节点
+        for i in range(sz):
+            cur = q.popleft()
+            # 将下一层节点放入队列
+            if cur.left:
+                q.append(cur.left)
+            if cur.right:
+                q.append(cur.right)
+```
+
+### 前中序构造
+
+理解前中序数组的结构
+
+![img](https://labuladong.online/algo/images/%E4%BA%8C%E5%8F%89%E6%A0%91%E7%B3%BB%E5%88%972/4.jpeg)
+
+```python
+# Definition for a binary tree node.
+# class TreeNode(object):
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+# 存索引
+
+val2Index={}
+class Solution(object):
+    def buildTree(self, preorder, inorder):
+        """
+        :type preorder: List[int]
+        :type inorder: List[int]
+        :rtype: TreeNode
+        """
+        for i in range(len(inorder)):#这里和leftSize对应
+            val2Index[inorder[i]]=i
+        return self.build(preorder,0,len(preorder)-1,inorder,0,len(inorder)-1)
+    def build(self,preorder,prestart,preend,inorder,instart,inend):
+        if prestart>preend:
+            return None
+        rootVal=preorder[prestart]
+        root=TreeNode(rootVal) # 构造头
+        index=val2Index.get(rootVal)
+        leftSize=index-instart
+        root.left=self.build(preorder,prestart+1,prestart+leftSize,inorder,instart,index-1)
+        root.right=self.build(preorder,prestart+leftSize+1,preend,inorder,index+1,inend)
+
+        return root
+        
+```
+
+### 中序后序
+
+![image-20240406013906501](C:\Users\chan\AppData\Roaming\Typora\typora-user-images\image-20240406013906501.png)
+
+```python
+# Definition for a binary tree node.
+# class TreeNode(object):
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+var2Index={}
+class Solution(object):
+    def buildTree(self, inorder, postorder):
+        """
+        :type inorder: List[int]
+        :type postorder: List[int]
+        :rtype: TreeNode
+        """
+        
+        for i in range(len(inorder)): #这里和rightSize对应
+            var2Index[inorder[i]]=i
+        return self.build(postorder,len(postorder)-1,0,inorder,0,len(inorder)-1)
+    def build(self,postorder,poststart,postend,inorder,instart,inend):
+        if poststart<postend:
+            return None
+        # if instart > inend:
+        #     return None
+
+        rootVal=postorder[poststart]
+        root=TreeNode(rootVal)
+        index=var2Index.get(rootVal)
+        rightSize=inend-index
+
+        root.right=self.build(postorder,poststart-1,poststart-rightSize,inorder,index+1,inend)
+        root.left=self.build(postorder,poststart-rightSize-1,postend,inorder,instart,index-1)
+        return root
+
+```
+
+### 前序后序
+
+```python
+var2Index={}
+class Solution(object):
+    def constructFromPrePost(self, preorder, postorder):
+        """
+        :type preorder: List[int]
+        :type postorder: List[int]
+        :rtype: TreeNode
+        """
+        for i in range(len(postorder)):
+            var2Index[postorder[i]]=i
+        return self.build(preorder,0,len(preorder)-1,postorder,len(postorder)-1,0)
+    def build(self,preorder,prestart,preend,postorder,poststart,postend):
+        if prestart>preend:
+            return None
+        if prestart==preend:
+            return TreeNode(preorder[prestart])
+        rootVal=preorder[prestart]
+        root=TreeNode(rootVal)
+        leftrootVal=preorder[prestart+1]
+        #直接折半
+        index=var2Index.get(leftrootVal)
+        leftSize=index-postend+1
+        root.left=self.build(preorder,prestart+1,prestart+leftSize,postorder,index,postend)
+        root.right=self.build(preorder,prestart+leftSize+1,preend,postorder,poststart-1,index+1)
+        return root
+```
+
+
+
+## 动态规划
+
+斐波那契，dp数组降到1维，动态变化三个值即可
+```python
+class Solution(object):
+    def fib(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        if n==0:
+            return 0
+        if n==1:
+            return 1
+        dp_i=1
+        dp_ii=1
+        dp_iii=1
+        for i in range(2,n):
+            dp_iii=dp_i+dp_ii
+            dp_i=dp_ii
+            dp_ii=dp_iii
+        return dp_iii
+```
+
+### 最长递增子序列
+
+**既然是递增子序列，我们只要找到前面那些结尾比 3 小的子序列，然后把 3 接到这些子序列末尾，就可以形成一个新的递增子序列，而且这个新的子序列长度加一**。
+
+```python
+for (int j = 0; j < i; j++) {
+    if (nums[i] > nums[j]) {
+        dp[i] = Math.max(dp[i], dp[j] + 1);
+    }
+}
+```
+
