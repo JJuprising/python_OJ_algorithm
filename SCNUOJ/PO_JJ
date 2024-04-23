@@ -1,0 +1,28 @@
+//
+// Created by chan on 2023/11/15. c++
+// 计数排序
+#include <iostream>
+using namespace std;
+#define N 10000000
+int a[N],b[N],c[N]={0};
+int n=0,m=0,bi=0;
+int mod=1e9+7;
+long long ans;
+int main(){
+    scanf("%d%d",&n,&m);
+    for(int i=1;i<=n;++i){
+        scanf("%d",&a[i]);
+        ++c[a[i]]; //这里按序号赋值，本身就已经有序了，不用排序了
+    }
+    for(int i=1;i<=m;++i){
+        for(int j=1;j<=c[i];++j){
+            b[++bi]=i;//重复的a[i]进行排序 0的话自动跳过了巧妙
+        }
+    }
+    for(int i=1;i<=n;++i){
+        (ans+=1LL*i*b[i])%=mod;
+    }
+    printf("%lld\n",ans);
+    return 0;
+
+}
